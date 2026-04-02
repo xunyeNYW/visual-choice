@@ -2,22 +2,50 @@
 
 本目录包含 visual-choice 的完整源代码，用于参考、修改和重新编译。
 
+## 快速开始
+
+### 构建项目
+```bash
+make build
+```
+
+### 运行测试
+```bash
+make test
+```
+
+### 运行服务器
+```bash
+make run
+```
+
 ## 文件结构
 
 ```
 src/
-├── main.go           # CLI 入口 + 命令处理 (390 行)
-├── server.go         # HTTP 服务器 + 文件监听 + HTML 模板 (947 行)
-├── events.go         # 事件记录工具 (108 行)
-├── go.mod            # Go 模块定义
-├── go.sum            # 依赖校验
-├── test.sh          # 自动化测试脚本
-└── example.html     # 测试页面示例
+├── cmd/
+│   └── visual-choice/
+│       └── main.go              # CLI 入口 + 命令处理
+├── internal/
+│   ├── events/
+│   │   ├── events.go            # 事件存储和处理
+│   │   └── events_test.go       # 事件测试 (85.2% 覆盖率)
+│   ├── models/
+│   │   ├── models.go            # 数据模型定义
+│   │   └── models_test.go       # 模型测试 (100% 覆盖率)
+│   └── server/
+│       ├── server.go            # HTTP 服务器 + 文件监听
+│       └── template.go          # HTML 模板定义
+├── Makefile                     # 构建脚本
+├── go.mod                       # Go 模块定义
+├── go.sum                       # 依赖校验
+├── test.sh                      # 自动化测试脚本
+└── example.html                 # 测试页面示例
 ```
 
 ## 核心组件
 
-### main.go (390 行)
+### cmd/visual-choice/main.go
 
 **功能**：CLI 命令入口和进程管理
 
@@ -39,7 +67,7 @@ type ServerInfo struct {
 }
 ```
 
-### server.go (947 行)
+### internal/server/server.go
 
 **功能**：HTTP 服务器、文件监听、HTML 模板
 
@@ -59,7 +87,7 @@ type Server struct {
 }
 ```
 
-2. **HTML 框架模板** (FrameTemplate, 488 行)
+2. **HTML 框架模板** (FrameTemplate)
    - 完整 CSS 样式系统
    - 响应式布局
    - 选项卡片样式
@@ -77,59 +105,111 @@ type Server struct {
    - 自动更新 `latestFile` 指针
    - 新文件时清空事件
 
-### events.go (108 行)
+### internal/events/events.go
 
-**功能**：事件记录工具函数
+**功能**：事件存储和处理
 
 **主要函数**：
-- `appendEvent()` - 追加事件到 JSONL 文件
-- `clearEvents()` - 清空事件文件
+- `Store.Append()` - 追加事件到 JSONL 文件
+- `Store.ReadEvents()` - 读取事件文件
+- `Store.Clear()` - 清空事件文件
+- `FormatEvents()` - 格式化显示事件
+- `GetLastChoice()` - 获取最后一次选择
+- `GetAllChoices()` - 获取所有选择（去重）
+
+### internal/models/models.go
+
+**功能**：数据模型定义
+
+**主要结构**：
+- `ServerInfo` - 服务器启动信息
+- `Event` - 用户交互事件
+- `ServerConfig` - 服务器配置
 
 ## 编译说明
 
-### 本地编译
+### 使用 Makefile（推荐）
+
+```bash
+# 标准构建（优化）
+make build
+
+# 快速构建（无优化）
+make build-fast
+
+# 交叉编译多平台
+make build-cross
+
+# 完整 CI 流程
+make ci
+```
+
+### 手动编译
 
 ```bash
 cd ~/.cursor/skills/visual-choice/src
-go build -o ../bin/visual-choice
+go build -o ../bin/visual-choice ./cmd/visual-choice
 ```
 
 ### 跨平台编译
 
 ```bash
 # macOS (Apple Silicon)
-GOOS=darwin GOARCH=arm64 go build -o ../bin/visual-choice
+GOOS=darwin GOARCH=arm64 go build -o ../bin/visual-choice ./cmd/visual-choice
 
 # macOS (Intel)
-GOOS=darwin GOARCH=amd64 go build -o ../bin/visual-choice
+GOOS=darwin GOARCH=amd64 go build -o ../bin/visual-choice ./cmd/visual-choice
 
 # Linux (x86_64)
-GOOS=linux GOARCH=amd64 go build -o ../bin/visual-choice
+GOOS=linux GOARCH=amd64 go build -o ../bin/visual-choice ./cmd/visual-choice
 
 # Windows
-GOOS=windows GOARCH=amd64 go build -o ../bin/visual-choice.exe
+GOOS=windows GOARCH=amd64 go build -o ../bin/visual-choice ./cmd/visual-choice.exe
 ```
 
 ### 优化编译
 
 ```bash
 # 减小二进制大小
-go build -ldflags="-s -w" -o ../bin/visual-choice
+go build -ldflags="-s -w" -o ../bin/visual-choice ./cmd/visual-choice
 ```
 
 ## 运行测试
 
+### 使用 Makefile
+
 ```bash
-cd ~/.cursor/skills/visual-choice/src
-./test.sh
+# 运行所有测试
+make test
+
+# 生成覆盖率报告
+make test-coverage
+
+# 显示覆盖率
+make test-cover
 ```
 
-测试内容：
-1. 服务器启动/停止
-2. HTTP 内容服务
-3. 文件监听
-4. 事件记录 API
-5. 命令行工具
+### 手动运行
+
+```bash
+cd ~/.cursor/skills/visual-choice/src
+go test -v ./...
+```
+
+测试覆盖率：
+- `internal/events`: 85.2%
+- `internal/models`: 100.0%
+
+### 测试内容
+
+1. 事件追加和读取
+2. 事件清空
+3. 事件格式化
+4. 获取最后选择
+5. 获取所有选择（去重）
+6. 空文件处理
+7. 无效 JSON 处理
+8. 默认配置验证
 
 ## 修改流程
 
@@ -137,33 +217,50 @@ cd ~/.cursor/skills/visual-choice/src
 
 ```bash
 cd ~/.cursor/skills/visual-choice/src
-# 编辑 main.go, server.go, events.go
+# 编辑对应包的文件
 ```
 
 ### 2. 重新编译
 
 ```bash
-go build -o ../bin/visual-choice
+# 使用 Makefile
+make build
+
+# 或手动编译
+go build -o ../bin/visual-choice ./cmd/visual-choice
 ```
 
-### 3. 验证
+### 3. 运行测试
+
+```bash
+# 使用 Makefile
+make test
+
+# 或手动运行
+go test -v ./...
+```
+
+### 4. 验证
 
 ```bash
 cd ~/.cursor/skills/visual-choice
 ./verify.sh
 ```
 
-### 4. 测试
+### 5. 测试功能
 
 ```bash
 # 启动服务器
-./scripts/start.sh
+make run
+
+# 或手动启动
+./../bin/visual-choice start --port 5234 --dir ./session
 
 # 手动测试功能
 # ...
 
 # 停止服务器
-./scripts/stop.sh
+make stop
 ```
 
 ## 技术栈
@@ -175,6 +272,7 @@ cd ~/.cursor/skills/visual-choice
 | 文件监听 | fsnotify | 跨平台文件事件 |
 | 并发 | sync.Mutex + Goroutine | 轻量级并发 |
 | 数据格式 | JSON/JSONL | 事件存储 |
+| 测试 | testing | 标准库单元测试 |
 
 ## 核心代码片段
 
@@ -216,7 +314,15 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
         return
     }
     
-    content, err := os.ReadFile(latestFile)
+    // 路径遍历保护
+    cleanPath := filepath.Clean(latestFile)
+    cleanScreenDir := filepath.Clean(s.screenDir)
+    if !strings.HasPrefix(cleanPath, cleanScreenDir) {
+        http.Error(w, "非法的文件路径", http.StatusForbidden)
+        return
+    }
+    
+    content, err := os.ReadFile(cleanPath)
     contentStr := string(content)
     
     isFullDoc := strings.HasPrefix(strings.TrimSpace(contentStr), "<!DOCTYPE") ||
@@ -233,7 +339,7 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-### 事件记录
+### 事件记录（带安全加固）
 
 ```go
 func (s *Server) appendEvent(event map[string]interface{}) error {
@@ -242,8 +348,9 @@ func (s *Server) appendEvent(event map[string]interface{}) error {
         return err
     }
     
+    // 使用 0600 权限
     f, err := os.OpenFile(eventsFile, 
-        os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+        os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
     defer f.Close()
     
     _, err = f.Write(append(data, '\n'))
@@ -256,7 +363,7 @@ func (s *Server) appendEvent(event map[string]interface{}) error {
 ### 外部依赖
 
 ```go
-github.com/fsnotify/fsnotify  // 文件监听
+github.com/fsnotify/fsnotify v1.7.0  // 文件监听
 ```
 
 ### 标准库
@@ -273,6 +380,7 @@ strings         // 字符串处理
 sync            // 同步原语
 syscall         // 系统调用
 time            // 时间处理
+context         // 上下文管理
 ```
 
 ## 性能特征
@@ -285,11 +393,23 @@ time            // 时间处理
 | 文件检测 | < 50ms |
 | 内存占用 | ~10 MB |
 
+## 安全特性
+
+### 已实现的安全加固
+
+1. **路径遍历保护** - 验证文件路径在允许目录内
+2. **HTTP 超时配置** - 防止资源耗尽攻击
+3. **请求体大小限制** - 最大 10MB
+4. **文件权限收紧** - 敏感文件使用 0600 权限
+5. **事件字段验证** - 类型检查和长度限制
+6. **端口号验证** - 限制在 1-65535 范围
+7. **Goroutine 正确退出** - 避免资源泄漏
+
 ## 扩展方向
 
 ### 添加新端点
 
-在 `server.go` 的 `NewServer()` 中添加：
+在 `internal/server/server.go` 的 `Start()` 中添加：
 
 ```go
 mux.HandleFunc("/api/custom", s.handleCustom)
@@ -297,28 +417,71 @@ mux.HandleFunc("/api/custom", s.handleCustom)
 
 ### 添加新命令
 
-在 `main.go` 的 `main()` 中添加：
+在 `cmd/visual-choice/main.go` 的 `main()` 中添加：
 
 ```go
 case "custom":
     handleCustom(os.Args[2:])
 ```
 
-### 修改 HTML 模板
+### 添加新测试
 
-编辑 `server.go` 中的 `FrameTemplate` 常量。
+在对应包的 `_test.go` 文件中添加测试函数：
+
+```go
+func TestYourFeature(t *testing.T) {
+    // 测试代码
+}
+```
+
+## Makefile 命令
+
+### 构建命令
+- `make build` - 标准构建（优化）
+- `make build-fast` - 快速构建
+- `make build-cross` - 交叉编译
+
+### 测试命令
+- `make test` - 运行所有测试
+- `make test-coverage` - 生成覆盖率报告
+- `make test-cover` - 显示覆盖率
+
+### 代码质量
+- `make fmt` - 格式化代码
+- `make fmt-check` - 检查代码格式
+- `make vet` - 运行 go vet
+- `make lint` - 完整检查
+
+### 依赖管理
+- `make tidy` - 整理依赖
+- `make deps-update` - 更新依赖
+
+### 清理命令
+- `make clean` - 清理构建产物
+- `make distclean` - 深度清理
+
+### 运行命令
+- `make run` - 运行服务器
+- `make status` - 查看状态
+- `make stop` - 停止服务器
+- `make events` - 查看事件
+
+详见 [BUILD.md](BUILD.md)
 
 ## 参考资料
 
 - [Go 官方文档](https://golang.org/doc/)
 - [fsnotify GitHub](https://github.com/fsnotify/fsnotify)
 - [net/http 包文档](https://pkg.go.dev/net/http)
+- [Go 测试指南](https://golang.org/doc/tutorial/add-a-test)
+- [Go 项目布局标准](https://github.com/golang-standards/project-layout)
 
 ## 版本历史
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
 | 1.0 | 2026-04-01 | 初始版本，核心功能完成 |
+| 1.1 | 2026-04-02 | 重构为标准 Go 项目结构，添加 Makefile 和测试 |
 
 ## 维护清单
 
@@ -328,11 +491,14 @@ case "custom":
 - [ ] 检查依赖安全更新
 - [ ] 测试跨平台编译
 - [ ] 验证二进制文件大小
+- [ ] 运行完整测试套件
+- [ ] 检查测试覆盖率
 
 ### 升级流程
 
 1. 拉取源代码仓库最新代码
 2. 复制源代码到 `src/` 目录
-3. 重新编译所有平台版本
-4. 运行完整测试
-5. 更新版本号
+3. 运行 `make tidy` 整理依赖
+4. 运行 `make ci` 执行完整 CI 流程
+5. 重新编译所有平台版本
+6. 更新版本号
