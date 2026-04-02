@@ -14,7 +14,7 @@ echo ""
 
 # 1. 检查目录结构
 echo "1. 检查目录结构..."
-required_files=("SKILL.md" "README.md" "reference.md" "examples.md" "MAINTENANCE.md" "ASSETS.md" "CROSS-PLATFORM.md" "deploy-cross-platform.sh" "scripts/start.sh" "scripts/stop.sh" "scripts/events.sh" "scripts/status.sh" "bin/visual-choice" "src/main.go" "src/server.go" "src/events.go" "src/go.mod" "src/README.md")
+required_files=("SKILL.md" "README.md" "reference.md" "examples.md" "MAINTENANCE.md" "ASSETS.md" "CROSS-PLATFORM.md" "deploy-cross-platform.sh" "scripts/start.sh" "scripts/stop.sh" "scripts/events.sh" "scripts/status.sh" "bin/visual-choice" "src/go.mod" "src/README.md" "src/Makefile" "src/BUILD.md")
 
 for file in "${required_files[@]}"; do
     if [ -f "$SKILL_DIR/$file" ]; then
@@ -22,6 +22,33 @@ for file in "${required_files[@]}"; do
     else
         echo "   ❌ $file (缺失)"
         ERRORS=$((ERRORS + 1))
+    fi
+done
+
+# 检查新的源代码结构
+echo ""
+echo "   检查源代码结构..."
+src_files=("src/cmd/visual-choice/main.go" "src/internal/server/server.go" "src/internal/server/template.go" "src/internal/events/events.go" "src/internal/models/models.go")
+
+for file in "${src_files[@]}"; do
+    if [ -f "$SKILL_DIR/$file" ]; then
+        echo "   ✅ $file"
+    else
+        echo "   ❌ $file (缺失)"
+        ERRORS=$((ERRORS + 1))
+    fi
+done
+
+# 检查测试文件
+echo ""
+echo "   检查测试文件..."
+test_files=("src/internal/events/events_test.go" "src/internal/models/models_test.go")
+
+for file in "${test_files[@]}"; do
+    if [ -f "$SKILL_DIR/$file" ]; then
+        echo "   ✅ $file"
+    else
+        echo "   ⚠️  $file (可选)"
     fi
 done
 
@@ -149,12 +176,16 @@ fi
 echo ""
 echo "7. 检查源代码完整性..."
 
-if [ -f "$SKILL_DIR/src/main.go" ] && [ -f "$SKILL_DIR/src/server.go" ] && [ -f "$SKILL_DIR/src/events.go" ]; then
-    echo "   ✅ 源代码文件完整"
+# 检查新的源代码结构
+if [ -f "$SKILL_DIR/src/cmd/visual-choice/main.go" ] && \
+   [ -f "$SKILL_DIR/src/internal/server/server.go" ] && \
+   [ -f "$SKILL_DIR/src/internal/events/events.go" ] && \
+   [ -f "$SKILL_DIR/src/internal/models/models.go" ]; then
+    echo "   ✅ 源代码文件完整 (新结构)"
     
     # 检查是否可以编译
     cd "$SKILL_DIR/src"
-    if go build -o /tmp/visual-choice-test 2>/dev/null; then
+    if go build -o /tmp/visual-choice-test ./cmd/visual-choice 2>/dev/null; then
         echo "   ✅ 源代码可编译"
         rm -f /tmp/visual-choice-test
     else
@@ -162,7 +193,7 @@ if [ -f "$SKILL_DIR/src/main.go" ] && [ -f "$SKILL_DIR/src/server.go" ] && [ -f 
         WARNINGS=$((WARNINGS + 1))
     fi
 else
-    echo "   ❌ 源代码文件缺失"
+    echo "   ❌ 源代码文件缺失 (新结构)"
     ERRORS=$((ERRORS + 1))
 fi
 
