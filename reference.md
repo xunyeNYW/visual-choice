@@ -7,11 +7,6 @@ Skill 目录：
 ~/.cursor/skills/visual-choice/
 ```
 
-源代码目录（开发用）：
-```
-/media/vdc/10226591/github/superpowers/visual-choice/
-```
-
 ## 命令行接口
 
 ```bash
