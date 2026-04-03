@@ -3,7 +3,45 @@
 
 set -e
 
-SESSION_DIR="$HOME/.visual-choice/session"
+# 获取脚本所在目录
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SKILL_DIR="$(dirname "$SCRIPT_DIR")"
+
+# ========================================
+# 自动检测安装位置和 Session 目录
+# ========================================
+
+if [ -f "$SKILL_DIR/.install-config" ]; then
+    source "$SKILL_DIR/.install-config"
+else
+    case "$SKILL_DIR" in
+        $HOME/.cursor/skills/visual-choice|$HOME/.flow/skills/visual-choice|$HOME/.claude/skills/visual-choice)
+            INSTALL_MODE="user"
+            SESSION_DIR="$HOME/.visual-choice/session"
+            ;;
+        $HOME/.config/opencode/skills/visual-choice)
+            INSTALL_MODE="user"
+            SESSION_DIR="$HOME/.visual-choice/session"
+            ;;
+        */.cursor/skills/visual-choice|*/.flow/skills/visual-choice|*/.claude/skills/visual-choice)
+            INSTALL_MODE="project"
+            PROJECT_ROOT="$(dirname "$(dirname "$(dirname "$SKILL_DIR")")")"
+            SESSION_DIR="$PROJECT_ROOT/.visual-choice/session"
+            ;;
+        */.config/opencode/skills/visual-choice)
+            INSTALL_MODE="project"
+            PROJECT_ROOT="$(dirname "$(dirname "$(dirname "$(dirname "$SKILL_DIR")")")")"
+            SESSION_DIR="$PROJECT_ROOT/.visual-choice/session"
+            ;;
+        *)
+            INSTALL_MODE="dev"
+            SESSION_DIR="$HOME/.visual-choice/session"
+            ;;
+    esac
+fi
+
+SESSION_DIR="${VISUAL_CHOICE_SESSION:-$SESSION_DIR}"
+
 PID_FILE="$SESSION_DIR/server.pid"
 
 # 检查 PID 文件

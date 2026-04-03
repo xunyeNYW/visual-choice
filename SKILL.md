@@ -1,13 +1,78 @@
 ---
 name: visual-choice
-description: 浏览器可视化选择工具 - 展示 mockup、设计选项、架构方案供用户点击选择。使用场景：设计评审、原型演示、用户调研、产品优先级投票、架构决策可视化。跨平台支持：Cursor、Claude Code、OpenCode。
+version: 1.1.0
+description: 浏览器可视化选择工具 - 展示 mockup、设计选项、架构方案供用户点击选择。使用场景：设计评审、原型演示、用户调研、产品优先级投票、架构决策可视化。跨平台支持：Cursor、Flow IDE、Claude Code、OpenCode。支持用户级和工程级两种安装方式。
 ---
 
 # Visual Choice - 可视化选择工具
 
-> **跨平台支持**: Cursor · Claude Code · OpenCode
+> **跨平台支持**: Cursor · Flow IDE · Claude Code · OpenCode
 >
 > 在浏览器中展示可视化选项，记录用户点击反馈，用于设计决策、原型测试、用户调研等场景。
+
+## 安装方式
+
+支持两种安装方式，根据使用场景选择：
+
+### 用户级安装（推荐个人使用）
+
+所有项目共享同一套工具和数据：
+
+```bash
+# 自动检测平台并安装
+./install.sh user
+
+# 或指定平台
+./install.sh user cursor    # 安装到 ~/.cursor/skills/
+./install.sh user flow      # 安装到 ~/.flow/skills/
+./install.sh user claude    # 安装到 ~/.claude/skills/
+./install.sh user opencode  # 安装到 ~/.config/opencode/skills/
+```
+
+安装位置：
+- Cursor: `~/.cursor/skills/visual-choice/`
+- Flow IDE: `~/.flow/skills/visual-choice/`
+- Claude Code: `~/.claude/skills/visual-choice/`
+- OpenCode: `~/.config/opencode/skills/visual-choice/`
+- Session 数据: `~/.visual-choice/session/`（所有项目共享）
+
+### 工程级安装（推荐团队项目）
+
+每个项目独立工具和数据，可纳入版本控制：
+
+```bash
+# 在项目根目录执行
+./install.sh project
+
+# 或指定平台
+./install.sh project cursor    # 安装到 项目/.cursor/skills/
+./install.sh project flow      # 安装到 项目/.flow/skills/
+./install.sh project claude    # 安装到 项目/.claude/skills/
+./install.sh project opencode  # 安装到 项目/.config/opencode/skills/
+```
+
+安装位置：
+- Cursor: `项目/.cursor/skills/visual-choice/`
+- Flow IDE: `项目/.flow/skills/visual-choice/`
+- Claude Code: `项目/.claude/skills/visual-choice/`
+- OpenCode: `项目/.config/opencode/skills/visual-choice/`
+- Session 数据: `项目/.visual-choice/session/`（项目独立）
+
+### 环境变量覆盖
+
+临时指定 Session 目录：
+
+```bash
+VISUAL_CHOICE_SESSION=/tmp/test-session ./scripts/start.sh
+```
+
+### 查看帮助
+
+```bash
+./install.sh --help
+```
+
+---
 
 ## 快速开始
 
@@ -276,6 +341,7 @@ EOF
 
 | 脚本 | 功能 |
 |------|------|
+| `install.sh` | 安装工具（用户级或工程级） |
 | `scripts/start.sh` | 启动服务器 |
 | `scripts/stop.sh` | 停止服务器 |
 | `scripts/events.sh` | 查看事件记录 |
@@ -291,10 +357,4 @@ EOF
 - **进程管理**：PID 文件管理服务器生命周期
 
 详细技术文档见 [reference.md](reference.md)
-维护指南见 [MAINTENANCE.md](MAINTENANCE.md)
-
----
-
-## 更多示例
-
 完整使用示例见 [examples.md](examples.md)

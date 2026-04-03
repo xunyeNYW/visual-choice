@@ -14,7 +14,7 @@ echo ""
 
 # 1. 检查目录结构
 echo "1. 检查目录结构..."
-required_files=("SKILL.md" "README.md" "reference.md" "examples.md" "MAINTENANCE.md" "ASSETS.md" "CROSS-PLATFORM.md" "deploy-cross-platform.sh" "scripts/start.sh" "scripts/stop.sh" "scripts/events.sh" "scripts/status.sh" "bin/visual-choice" "src/go.mod" "src/README.md" "src/Makefile" "src/BUILD.md")
+required_files=("SKILL.md" "README.md" "reference.md" "examples.md" "install.sh" "scripts/start.sh" "scripts/stop.sh" "scripts/events.sh" "scripts/status.sh" "bin/visual-choice" "src/go.mod" "src/README.md" "src/Makefile" "src/BUILD.md")
 
 for file in "${required_files[@]}"; do
     if [ -f "$SKILL_DIR/$file" ]; then

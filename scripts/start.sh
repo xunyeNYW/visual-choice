@@ -7,9 +7,53 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_DIR="$(dirname "$SCRIPT_DIR")"
 
+# ========================================
+# 自动检测安装位置和 Session 目录
+# ========================================
+
+if [ -f "$SKILL_DIR/.install-config" ]; then
+    # 从安装配置文件读取
+    source "$SKILL_DIR/.install-config"
+else
+    # 根据路径自动判断安装模式
+    case "$SKILL_DIR" in
+        $HOME/.cursor/skills/visual-choice|$HOME/.flow/skills/visual-choice|$HOME/.claude/skills/visual-choice)
+            # 用户级安装: ~/.cursor/skills/, ~/.flow/skills/, ~/.claude/skills/
+            INSTALL_MODE="user"
+            SESSION_DIR="$HOME/.visual-choice/session"
+            ;;
+        $HOME/.config/opencode/skills/visual-choice)
+            # 用户级安装: ~/.config/opencode/skills/
+            INSTALL_MODE="user"
+            SESSION_DIR="$HOME/.visual-choice/session"
+            ;;
+        */.cursor/skills/visual-choice|*/.flow/skills/visual-choice|*/.claude/skills/visual-choice)
+            # 工程级安装: 项目/.cursor/skills/, 项目/.flow/skills/, 项目/.claude/skills/
+            INSTALL_MODE="project"
+            # 计算项目根目录 (去掉 /.xxx/skills/visual-choice 部分)
+            PROJECT_ROOT="$(dirname "$(dirname "$(dirname "$SKILL_DIR")")")"
+            SESSION_DIR="$PROJECT_ROOT/.visual-choice/session"
+            ;;
+        */.config/opencode/skills/visual-choice)
+            # 工程级安装: 项目/.config/opencode/skills/
+            INSTALL_MODE="project"
+            # 计算项目根目录 (去掉 /.config/opencode/skills/visual-choice 部分)
+            PROJECT_ROOT="$(dirname "$(dirname "$(dirname "$(dirname "$SKILL_DIR")")")")"
+            SESSION_DIR="$PROJECT_ROOT/.visual-choice/session"
+            ;;
+        *)
+            # 开发模式: 在源码目录运行
+            INSTALL_MODE="dev"
+            SESSION_DIR="$HOME/.visual-choice/session"
+            ;;
+    esac
+fi
+
+# 支持环境变量覆盖
+SESSION_DIR="${VISUAL_CHOICE_SESSION:-$SESSION_DIR}"
+
 # Binary 文件路径
 VISUAL_CHOICE_BIN="$SKILL_DIR/bin/visual-choice"
-SESSION_DIR="$HOME/.visual-choice/session"
 
 # 检查二进制文件是否存在
 if [ ! -f "$VISUAL_CHOICE_BIN" ]; then
@@ -51,11 +95,12 @@ if [ -f "$SESSION_DIR/state/server-info.json" ]; then
     echo ""
     echo "✅ 服务器已启动"
     echo ""
+    echo "安装模式: $INSTALL_MODE"
     cat "$SESSION_DIR/state/server-info.json" | grep -E '"url"|"screen_dir"|"state_dir"' | sed 's/"/ /g' | sed 's/,//g'
     echo ""
     echo "在浏览器访问上方 URL 开始使用"
-    echo "运行 '~/.cursor/skills/visual-choice/scripts/status.sh' 查看状态"
-    echo "运行 '~/.cursor/skills/visual-choice/scripts/stop.sh' 停止服务器"
+    echo "运行 '$SKILL_DIR/scripts/status.sh' 查看状态"
+    echo "运行 '$SKILL_DIR/scripts/stop.sh' 停止服务器"
 else
     echo "⚠️  服务器启动失败，请检查输出"
     exit 1
